@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Reflection;
 using Component.Properties;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -51,7 +52,7 @@ namespace Component
         public static void Configure(string settingsName)
         {
             Configuration = new ConfigurationBuilder()
-                           .SetBasePath(Directory.GetCurrentDirectory())
+                           .SetBasePath(Path.GetDirectoryName(Assembly.GetEntryAssembly().Location))
                            .AddJsonFile("appsettings.json", false)
                            .Build();
             Configuration.GetSection(settingsName).Bind(Settings = new Settings());

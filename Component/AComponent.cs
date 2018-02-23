@@ -16,7 +16,7 @@ namespace Component
 
         public bool AVerb(string[] args)
         {
-            Logger.LogInformation($"This is a console runnable component for {Settings.SomeSetting}");
+            Logger.LogInformation("This is a console-runnable component with SomeSetting={@SomeSetting}", Settings.SomeSetting);
 
             return true;
         }
