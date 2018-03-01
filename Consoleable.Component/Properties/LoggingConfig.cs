@@ -5,12 +5,13 @@ using Microsoft.Extensions.Logging;
 using Serilog;
 using Serilog.Events;
 
-namespace Component.Properties
+namespace Consoleable.Component.Properties
 {
     static class LoggingConfig
     {
         static string LoggingConfigurationSectionName = "Logging";
         static string LogLevelSettingName = "LogLevel";
+        public static string ConfiguredLoggingLevel;
         
         public static ILoggerFactory FromConfiguration(this LoggerFactory loggerFactory, IConfiguration configuration)
         {
@@ -29,7 +30,7 @@ namespace Component.Properties
                     serilogLevel = LogEventLevel.Information;
                 }
             }
-
+            ConfiguredLoggingLevel = serilogLevel.ToString();
             return loggerFactory.AddSerilog(logconfig.MinimumLevel.Is(serilogLevel).WriteTo.Console().CreateLogger());
         }
 

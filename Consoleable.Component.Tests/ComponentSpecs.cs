@@ -1,11 +1,13 @@
 using System;
 using System.Collections.Generic;
-using Component.Properties;
+using Consoleable.Component.Properties;
 using NUnit.Framework;
+using TestBase;
 
-namespace Component.Tests
+namespace Consoleable.Component.Tests
 {
-    public class AComponentShould
+    [TestFixture]
+    public class ComponentSpecs
     {
         List<String> log;
         AComponent sut;
@@ -18,10 +20,15 @@ namespace Component.Tests
         }
 
         [Test]
-        public void Log__WhenAVerbIsCalled()
+        public void Logs__WhenAVerbIsCalled()
         {
             sut.AVerb(null);
-            Assert.IsNotEmpty(log);
+
+            log
+                .ShouldNotBeEmpty()
+                .ShouldContain(s=>s.Contains("AVerb"));
+
+            log.ForEach(Console.WriteLine);
         }
     }
 }
