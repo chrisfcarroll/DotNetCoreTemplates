@@ -1,48 +1,35 @@
 using System;
-using System.Collections.Generic;
+using System.Linq;
+using LibLog;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
-using Serilog;
-using Serilog.Events;
 
 namespace Consoleable.Component.Properties
 {
-    static class LoggingConfig
+    class LoggingConfig
     {
-        static string LoggingConfigurationSectionName = "Logging";
-        static string LogLevelSettingName = "LogLevel";
-        public static string ConfiguredLoggingLevel;
+        public static ILog LoggerFor<T>(){return LogProvider.For<T>();}
+        public static ILog LoggerFor(string name){return LogProvider.GetLogger(name);}
+        public static LoggingConfig Instance;
         
-        public static ILoggerFactory FromConfiguration(this LoggerFactory loggerFactory, IConfiguration configuration)
+        public static ILog FromConfiguration(IConfiguration configuration)
         {
-            var logconfig = new LoggerConfiguration();
-            var logLevelSetting = configuration.GetSection(LoggingConfigurationSectionName)[LogLevelSettingName];
-            
-            if (!Enum.TryParse<LogEventLevel>(logLevelSetting, out var serilogLevel))
-            {
-                if (Enum.TryParse<LogLevel>(logLevelSetting, out var mslogLevel))
-                {
-                    serilogLevel = MsLevelToSerilogLevel[mslogLevel];
-                    if (mslogLevel == LogLevel.None) { logconfig = logconfig.Filter.ByExcluding(x => true); }
-                }
-                else
-                {
-                    serilogLevel = LogEventLevel.Information;
-                }
-            }
-            ConfiguredLoggingLevel = serilogLevel.ToString();
-            return loggerFactory.AddSerilog(logconfig.MinimumLevel.Is(serilogLevel).WriteTo.Console().CreateLogger());
-        }
 
-        static readonly Dictionary<LogLevel,LogEventLevel> MsLevelToSerilogLevel= new Dictionary<LogLevel,LogEventLevel>
-        {
-            {LogLevel.Critical,LogEventLevel.Fatal},
-            {LogLevel.Debug,LogEventLevel.Debug},
-            {LogLevel.Error,LogEventLevel.Error},
-            {LogLevel.Information,LogEventLevel.Information},
-            {LogLevel.None,LogEventLevel.Fatal},
-            {LogLevel.Trace,LogEventLevel.Verbose},
-            {LogLevel.Warning,LogEventLevel.Warning},
-        };
+            configuration
+                .GetSection(ReadFromSectionName)
+                .Bind(Instance= new LoggingConfig());
+
+            LogProvider
+                .SetCurrentLogProvider(
+                    Activator.CreateInstance(
+                        LogProvider
+                            .Providers
+                            .FirstOrDefault(p=>p.Name.StartsWith(Instance.Provider??"Console"))) as ILogProvider);
+
+            return LoggerFor<AComponent>();
+        }
+        const string ReadFromSectionName = "Logging";
+
+        public LogLevel LogLevel { get; set; }
+        public string Provider { get; set; }
     }
 }

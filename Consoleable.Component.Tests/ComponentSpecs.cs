@@ -1,34 +1,35 @@
 using System;
-using System.Collections.Generic;
 using Consoleable.Component.Properties;
+using LibLog;
 using NUnit.Framework;
 using TestBase;
+using StringListLogger=LibLog.StringListLogger;
 
 namespace Consoleable.Component.Tests
 {
     [TestFixture]
     public class ComponentSpecs
     {
-        List<String> log;
         AComponent sut;
+        ILog logger;
 
         [SetUp]
         public void Setup()
         {
-            var logger = new StringListLogger(log = new List<string>());
+            logger= LogProvider.Use<StringListLogProvider>()("Test");
             sut = new AComponent(logger, new Settings());
         }
 
         [Test]
         public void Logs__WhenAVerbIsCalled()
         {
-            sut.AVerb(null);
+            sut.AVerb("boo");
 
-            log
+            StringListLogger.Loggers["Test"].LoggedLines.ForEach(Console.WriteLine);
+
+            StringListLogger.Loggers["Test"].LoggedLines
                 .ShouldNotBeEmpty()
-                .ShouldContain(s=>s.Contains("AVerb"));
-
-            log.ForEach(Console.WriteLine);
+                .ShouldContain(s => s.Contains("AVerb"));
         }
     }
 }

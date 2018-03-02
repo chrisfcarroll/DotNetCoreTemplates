@@ -2,9 +2,9 @@ using System;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using LibLog;
 using Consoleable.Component.Properties;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
 
 [assembly: ComVisible(false)]
 [assembly: Guid("d1c4ab83-c553-4e3b-8e75-c9e76498206b")]
@@ -15,11 +15,9 @@ namespace Consoleable.Component
     class Startup
     {
         public static IConfiguration Configuration;
-        public static ILoggerFactory LoggerFactory;
+        public static ILog Logger;
         public static Settings Settings;
-        public static ILogger CreateLogger<T>() { return LoggerFactory.CreateLogger<T>(); }
-        public static ILogger CreateLogger(Type type) { return LoggerFactory.CreateLogger(type); }
-        public static ILogger CreateLogger(string name) { return LoggerFactory.CreateLogger(name); }
+        public static ILog CreateLogger<T>() { return LoggingConfig.LoggerFor<T>(); }
 
         public static Instance<T> Configure<T>()
         {
@@ -28,10 +26,8 @@ namespace Consoleable.Component
                 .AddJsonFile("appsettings.json", false)
                 .Build();
             Configuration.GetSection(typeof(T).Name).Bind(Settings = new Settings());
-
-            LoggerFactory = new LoggerFactory().FromConfiguration(Configuration);
-            LoggerFactory.CreateLogger("StartUp").LogDebug($"Logging configured at level {LoggingConfig.ConfiguredLoggingLevel}");
-            LoggerFactory.CreateLogger("StartUp").LogDebug("Settings: {@Settings}", Settings);
+            Logger = LoggingConfig.FromConfiguration(Configuration);
+            LoggingConfig.LoggerFor("Startup").Debug($"Console appsettings requested Setting {Settings.SomeSetting}, and requested logging with provider {LoggingConfig.Instance.Provider} at level {LoggingConfig.Instance.LogLevel}");
             return new Instance<T>();
         }
 
@@ -39,9 +35,9 @@ namespace Consoleable.Component
         {
             // ReSharper disable MemberHidesStaticFromOuterClass
             public new IConfiguration Configuration => Startup.Configuration;
-            public new ILoggerFactory LoggerFactory => Startup.LoggerFactory;
+            public new ILog Logger => Startup.Logger;
             public new Settings Settings => Startup.Settings;
-            public     ILogger CreateLogger() => Startup.CreateLogger<T>();
+            public     ILog CreateLogger() => Startup.CreateLogger<T>();
         }
     }
 
@@ -54,7 +50,7 @@ namespace Consoleable.Component
             Startup.Configure<AComponent>();
 
             var component = new AComponent(
-                                           Startup.LoggerFactory.CreateLogger<AComponent>(),
+                                           Startup.CreateLogger<AComponent>(),
                                            Startup.Settings
                                           );
 
