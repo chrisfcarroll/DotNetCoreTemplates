@@ -2,24 +2,24 @@ using System;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using LibLog;
 using Consoleable.Component.Properties;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 
 [assembly: ComVisible(false)]
 [assembly: Guid("d1c4ab83-c553-4e3b-8e75-c9e76498206b")]
-[assembly: InternalsVisibleTo("Consoleable.Component.Tests")]
+[assembly: InternalsVisibleTo("Consoleable.Component.Specs")]
 
 namespace Consoleable.Component
 {
     class Startup
     {
         public static IConfiguration Configuration;
-        public static ILog Logger;
+        public static ILogger Logger;
         public static Settings Settings;
-        public static ILog CreateLogger<T>() { return LibLogFactory.LoggerFor<T>(); }
+        public static ILogger CreateLogger<T>() { return LoggerFactoryFactory.LoggerFor<T>(); }
 
-        public static void Main(string[] args)
+        public static int Main(params string[] args)
         {
             HelpAndExitIfNot( args.Length>0 );
             
@@ -29,7 +29,8 @@ namespace Consoleable.Component
                 Startup.CreateLogger<AComponent>(),
                 Startup.Settings
             );
-            component.AnAction(args);
+
+            return component.AnAction(args);
         }
 
         public static void Configure<T>()
@@ -39,8 +40,11 @@ namespace Consoleable.Component
                 .AddJsonFile("appsettings.json", false)
                 .Build();
             Configuration.GetSection(typeof(T).Name).Bind(Settings = new Settings());
-            Logger = LibLogFactory.FromConfiguration(Configuration);
-            LibLogFactory.LoggerFor("Startup").Debug($"Console appsettings requested Setting {Settings.SomeSetting}, and requested logging with provider {LibLogFactory.Instance.Provider} at level {LibLogFactory.Instance.LogLevel}");
+            Logger = CreateLogger<T>();
+
+            CreateLogger<Startup>().LogDebug(
+                $"Console appsettings requested Setting {Settings.SomeSetting}, " +
+                $"and requested logging at level {LoggerFactoryFactory.LogLevel}");
         }
 
 

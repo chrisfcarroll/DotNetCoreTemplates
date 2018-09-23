@@ -3,19 +3,21 @@ using System.Linq;
 using LibLog;
 using Microsoft.Extensions.Configuration;
 
-namespace Consoleable.Component.Properties
+namespace Consoleable.Component.With.LibLog.Properties
 {
     class LibLogFactory
     {
+        public LogLevel LogLevel { get; set; }
+        public string Provider { get; set; }
+
         public static ILog LoggerFor<T>(){return LogProvider.For<T>();}
         public static ILog LoggerFor(string name){return LogProvider.GetLogger(name);}
         public static LibLogFactory Instance;
-        
         public static ILog FromConfiguration(IConfiguration configuration)
         {
 
             configuration
-                .GetSection(ReadFromSectionName)
+                .GetSection(Logging)
                 .Bind(Instance= new LibLogFactory());
 
             LogProvider
@@ -27,9 +29,6 @@ namespace Consoleable.Component.Properties
 
             return LoggerFor<AComponent>();
         }
-        const string ReadFromSectionName = "Logging";
-
-        public LogLevel LogLevel { get; set; }
-        public string Provider { get; set; }
+        const string Logging = "Logging";
     }
 }

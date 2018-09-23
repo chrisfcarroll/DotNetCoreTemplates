@@ -40,19 +40,9 @@
 // LibLog providers internally to provide built in support for popular logging frameworks.
 
 #pragma warning disable 1591
-using System;
-using System;
-using System.Collections.Generic;
-using System.Collections.Generic;
-using System.Diagnostics;
+
 using System.Diagnostics.CodeAnalysis;
-using System.Diagnostics.CodeAnalysis;
-using System.Diagnostics.CodeAnalysis;
-using System.Globalization;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Reflection;
-using System.Text.RegularExpressions;
+using LibLog.LogProviders;
 using Newtonsoft.Json;
 
 // ReSharper disable InconsistentNaming
@@ -60,13 +50,24 @@ using Newtonsoft.Json;
 [assembly: SuppressMessage("Microsoft.Design", "CA1020:AvoidNamespacesWithFewTypes", Scope = "namespace", Target = "Consoleable.Component.Logging")]
 [assembly: SuppressMessage("Microsoft.Design", "CA1026:DefaultParametersShouldNotBeUsed", Scope = "member", Target = "Consoleable.Component.Logging.Logger.#Invoke(Consoleable.Component.Logging.LogLevel,System.Func`1<System.String>,System.Exception,System.Object[])")]
 
-namespace Consoleable.Component.With.LibLog.Properties
-{
 // If you copied this file manually, you need to change all "YourRootNameSpace" so not to clash with other libraries
 // that use LibLog
 #if LIBLOG_PROVIDERS_ONLY
 namespace Consoleable.Component
 #else
+namespace LibLog
+#endif
+{
+    using System.Collections.Generic;
+    using System.Diagnostics.CodeAnalysis;
+#if LIBLOG_PROVIDERS_ONLY
+    using LibLog.LogProviders;
+#else
+    using LibLog.LogProviders;
+#endif
+    using System;
+#if !LIBLOG_PROVIDERS_ONLY
+    using System.Diagnostics;
 #if !LIBLOG_PORTABLE
     using System.Runtime.CompilerServices;
 #endif
@@ -77,7 +78,7 @@ namespace Consoleable.Component
 #else
     public
 #endif
-        delegate bool Logger(LogLevel logLevel, Func<string> messageFunc, Exception exception = null, params object[] formatParameters);
+    delegate bool Logger(LogLevel logLevel, Func<string> messageFunc, Exception exception = null, params object[] formatParameters);
 
 #if !LIBLOG_PROVIDERS_ONLY
     /// <summary>
@@ -88,7 +89,7 @@ namespace Consoleable.Component
 #else
     public
 #endif
-        interface ILog
+    interface ILog
     {
         /// <summary>
         /// Log a message the specified log level.
@@ -116,7 +117,7 @@ namespace Consoleable.Component
 #else
     public
 #endif
-        enum LogLevel
+    enum LogLevel
     {
         Trace,
         Debug,
@@ -135,7 +136,7 @@ namespace Consoleable.Component
 #else
     internal
 #endif
-        static partial class LogExtensions
+    static partial class LogExtensions
     {
         public static bool IsDebugEnabled(this ILog logger)
         {
@@ -483,7 +484,7 @@ namespace Consoleable.Component
 #else
     public
 #endif
-        interface ILogProvider
+    interface ILogProvider
     {
         /// <summary>
         /// Gets the specified named logger.
@@ -519,7 +520,7 @@ namespace Consoleable.Component
 #else
     public
 #endif
-        static class LogProvider
+    static class LogProvider
     {
 #if !LIBLOG_PROVIDERS_ONLY
         private const string NullLogProvider = "Current Log Provider is not set. Call SetCurrentLogProvider " +
@@ -588,16 +589,16 @@ namespace Consoleable.Component
 #else
         internal
 #endif
-            static ILog For<T>()
+        static ILog For<T>()
         {
             return GetLogger(typeof(T));
         }
 
 #if !LIBLOG_PORTABLE
-/// <summary>
-/// Gets a logger for the current class.
-/// </summary>
-/// <returns>An instance of <see cref="ILog"/></returns>
+        /// <summary>
+        /// Gets a logger for the current class.
+        /// </summary>
+        /// <returns>An instance of <see cref="ILog"/></returns>
         [MethodImpl(MethodImplOptions.NoInlining)]
 #if LIBLOG_PUBLIC
         public
@@ -622,7 +623,7 @@ namespace Consoleable.Component
 #else
         internal
 #endif
-            static ILog GetLogger(Type type, string fallbackTypeName = "System.Object")
+        static ILog GetLogger(Type type, string fallbackTypeName = "System.Object")
         {
             // If the type passed in is null then fallback to the type name specified
             return GetLogger(type != null ? type.FullName : fallbackTypeName);
@@ -638,7 +639,7 @@ namespace Consoleable.Component
 #else
         internal
 #endif
-            static ILog GetLogger(string name)
+        static ILog GetLogger(string name)
         {
             ILogProvider logProvider = CurrentLogProvider ?? ResolveLogProvider();
             return logProvider == null
@@ -657,7 +658,7 @@ namespace Consoleable.Component
 #else
         internal
 #endif
-            static IDisposable OpenNestedContext(string message)
+        static IDisposable OpenNestedContext(string message)
         {
             ILogProvider logProvider = CurrentLogProvider ?? ResolveLogProvider();
 
@@ -678,7 +679,7 @@ namespace Consoleable.Component
 #else
         internal
 #endif
-            static IDisposable OpenMappedContext(string key, object value, bool destructure = false)
+        static IDisposable OpenMappedContext(string key, object value, bool destructure = false)
         {
             ILogProvider logProvider = CurrentLogProvider ?? ResolveLogProvider();
 
@@ -691,34 +692,34 @@ namespace Consoleable.Component
 #if LIBLOG_PROVIDERS_ONLY
     private
 #else
-        internal
+    internal
 #endif
-            delegate bool IsLoggerAvailable();
+    delegate bool IsLoggerAvailable();
 
 #if LIBLOG_PROVIDERS_ONLY
     private
 #else
-        internal
+    internal
 #endif
-            delegate ILogProvider CreateLogProvider();
+    delegate ILogProvider CreateLogProvider();
 
-        public static readonly List<Type> Providers= new List<Type>{typeof(ConsoleLogProvider),typeof(SerilogLogProvider),typeof(NLogLogProvider),typeof(Log4NetLogProvider),typeof(EntLibLogProvider),typeof(LoupeLogProvider),};
+    public static readonly List<Type> Providers= new List<Type>{typeof(ConsoleLogProvider),typeof(SerilogLogProvider),typeof(NLogLogProvider),typeof(Log4NetLogProvider),typeof(EntLibLogProvider),typeof(LoupeLogProvider),};
 
 #if LIBLOG_PROVIDERS_ONLY
     private
 #else
-        internal
+    internal
 #endif
-            static readonly List<Tuple<IsLoggerAvailable, CreateLogProvider>> LogProviderResolvers =
-                new List<Tuple<IsLoggerAvailable, CreateLogProvider>>
-                {
-                    new Tuple<IsLoggerAvailable, CreateLogProvider>(ConsoleLogProvider.IsLoggerAvailable, () => new ConsoleLogProvider()),
-                    new Tuple<IsLoggerAvailable, CreateLogProvider>(SerilogLogProvider.IsLoggerAvailable, () => new SerilogLogProvider()),
-                    new Tuple<IsLoggerAvailable, CreateLogProvider>(NLogLogProvider.IsLoggerAvailable, () => new NLogLogProvider()),
-                    new Tuple<IsLoggerAvailable, CreateLogProvider>(Log4NetLogProvider.IsLoggerAvailable, () => new Log4NetLogProvider()),
-                    new Tuple<IsLoggerAvailable, CreateLogProvider>(EntLibLogProvider.IsLoggerAvailable, () => new EntLibLogProvider()),
-                    new Tuple<IsLoggerAvailable, CreateLogProvider>(LoupeLogProvider.IsLoggerAvailable, () => new LoupeLogProvider()),
-                };
+    static readonly List<Tuple<IsLoggerAvailable, CreateLogProvider>> LogProviderResolvers =
+            new List<Tuple<IsLoggerAvailable, CreateLogProvider>>
+        {
+            new Tuple<IsLoggerAvailable, CreateLogProvider>(ConsoleLogProvider.IsLoggerAvailable, () => new ConsoleLogProvider()),
+            new Tuple<IsLoggerAvailable, CreateLogProvider>(SerilogLogProvider.IsLoggerAvailable, () => new SerilogLogProvider()),
+            new Tuple<IsLoggerAvailable, CreateLogProvider>(NLogLogProvider.IsLoggerAvailable, () => new NLogLogProvider()),
+            new Tuple<IsLoggerAvailable, CreateLogProvider>(Log4NetLogProvider.IsLoggerAvailable, () => new Log4NetLogProvider()),
+            new Tuple<IsLoggerAvailable, CreateLogProvider>(EntLibLogProvider.IsLoggerAvailable, () => new EntLibLogProvider()),
+            new Tuple<IsLoggerAvailable, CreateLogProvider>(LoupeLogProvider.IsLoggerAvailable, () => new LoupeLogProvider()),
+        };
 
 #if !LIBLOG_PROVIDERS_ONLY
         private static void RaiseOnCurrentLogProviderSet()
@@ -868,7 +869,7 @@ namespace Consoleable.Component
             }
 
 #if !LIBLOG_PORTABLE
-// Callsite HACK - Using the messageFunc to provide the callsite-logger-type
+            // Callsite HACK - Using the messageFunc to provide the callsite-logger-type
             var lastExtensionMethod = _lastExtensionMethod;
             if (lastExtensionMethod == null || !lastExtensionMethod.Equals(messageFunc))
             {
@@ -922,10 +923,29 @@ namespace Consoleable.Component
         }
     }
 #endif
+    }
 
 #if LIBLOG_PROVIDERS_ONLY
 namespace LibLog.LogProviders
 #else
+    namespace LibLog.LogProviders
+#endif
+{
+    using System;
+    using System.Collections.Generic;
+    using System.Diagnostics.CodeAnalysis;
+#if !LIBLOG_PORTABLE
+    using System.Diagnostics;
+#endif
+    using System.Globalization;
+    using System.Linq;
+    using System.Linq.Expressions;
+    using System.Reflection;
+#if !LIBLOG_PORTABLE
+    using System.Text;
+#endif
+    using System.Text.RegularExpressions;
+
 #if !LIBLOG_PORTABLE
     [ExcludeFromCodeCoverage]
 #endif
@@ -943,7 +963,7 @@ namespace LibLog.LogProviders
             _lazyOpenNdcMethod
                 = new Lazy<OpenNdc>(GetOpenNdcMethod);
             _lazyOpenMdcMethod
-                = new Lazy<OpenMdc>(GetOpenMdcMethod);
+               = new Lazy<OpenMdc>(GetOpenMdcMethod);
         }
 
         public abstract Logger GetLogger(string name);
@@ -1104,13 +1124,13 @@ namespace LibLog.LogProviders
 
                     NewExpression newLoggingEventExpression =
                         Expression.New(loggingEventConstructor,
-                            levelCast,
-                            loggerNameParam,
-                            Expression.Constant(null, typeof(IFormatProvider)),
-                            messageParam,
-                            Expression.Constant(null, typeof(object[])),
-                            exceptionParam
-                        );
+                                       levelCast,
+                                        loggerNameParam,
+                                        Expression.Constant(null, typeof(IFormatProvider)),
+                                        messageParam,
+                                        Expression.Constant(null, typeof(object[])),
+                                        exceptionParam
+                                        );
 
                     _logEventInfoFact = Expression.Lambda<Func<string, object, string, Exception, object>>(newLoggingEventExpression,
                         loggerNameParam, levelParam, messageParam, exceptionParam).Compile();
@@ -1140,7 +1160,7 @@ namespace LibLog.LogProviders
                     {
                         Type callsiteLoggerType = typeof(NLogLogger);
 #if !LIBLOG_PORTABLE
-// Callsite HACK - Extract the callsite-logger-type from the messageFunc
+                        // Callsite HACK - Extract the callsite-logger-type from the messageFunc
                         var methodType = callsiteMessageFunc.Method.DeclaringType;
                         if (methodType == typeof(LogExtensions) || (methodType != null && methodType.DeclaringType == typeof(LogExtensions)))
                         {
@@ -1355,14 +1375,14 @@ namespace LibLog.LogProviders
             MethodCallExpression callPushBody =
                 Expression.Call(
                     Expression.Property(Expression.Property(null, stacksProperty),
-                        stacksIndexerProperty,
-                        Expression.Constant("NDC")),
+                                        stacksIndexerProperty,
+                                        Expression.Constant("NDC")),
                     pushMethod,
                     messageParameter);
 
             OpenNdc result =
                 Expression.Lambda<OpenNdc>(callPushBody, messageParameter)
-                    .Compile();
+                          .Compile();
 
             return result;
         }
@@ -1478,12 +1498,12 @@ namespace LibLog.LogProviders
             }
 
             private static Action<object, object> GetLogDelegate(Type loggerType, Type loggingEventType, UnaryExpression instanceCast,
-                ParameterExpression instanceParam)
+                                                 ParameterExpression instanceParam)
             {
                 //Action<object, object, string, Exception> Log =
                 //(logger, callerStackBoundaryDeclaringType, level, message, exception) => { ((LibLog)logger).Log(new LoggingEvent(callerStackBoundaryDeclaringType, logger.Repository, logger.Name, level, message, exception)); }
                 MethodInfo writeExceptionMethodInfo = loggerType.GetMethodPortable("Log",
-                    loggingEventType);
+                                                                                   loggingEventType);
 
                 ParameterExpression loggingEventParameter =
                     Expression.Parameter(typeof(object), "loggingEvent");
@@ -1497,9 +1517,9 @@ namespace LibLog.LogProviders
                     loggingEventCasted);
 
                 var logDelegate = Expression.Lambda<Action<object, object>>(
-                    writeMethodExp,
-                    instanceParam,
-                    loggingEventParameter).Compile();
+                                                writeMethodExp,
+                                                instanceParam,
+                                                loggingEventParameter).Compile();
 
                 return logDelegate;
             }
@@ -1520,38 +1540,38 @@ namespace LibLog.LogProviders
                 //(logger, callerStackBoundaryDeclaringType, level, message, exception) => new LoggingEvent(callerStackBoundaryDeclaringType, ((LibLog)logger).Repository, ((LibLog)logger).Name, (Level)level, message, exception); }
                 NewExpression newLoggingEventExpression =
                     Expression.New(loggingEventConstructor,
-                        callerStackBoundaryDeclaringTypeParam,
-                        Expression.Property(instanceCast, "Repository"),
-                        Expression.Property(instanceCast, "Name"),
-                        levelCast,
-                        messageParam,
-                        exceptionParam);
+                                   callerStackBoundaryDeclaringTypeParam,
+                                   Expression.Property(instanceCast, "Repository"),
+                                   Expression.Property(instanceCast, "Name"),
+                                   levelCast,
+                                   messageParam,
+                                   exceptionParam);
 
                 var createLoggingEvent =
                     Expression.Lambda<Func<object, Type, object, string, Exception, object>>(
-                            newLoggingEventExpression,
-                            instanceParam,
-                            callerStackBoundaryDeclaringTypeParam,
-                            levelParam,
-                            messageParam,
-                            exceptionParam)
-                        .Compile();
+                                  newLoggingEventExpression,
+                                  instanceParam,
+                                  callerStackBoundaryDeclaringTypeParam,
+                                  levelParam,
+                                  messageParam,
+                                  exceptionParam)
+                              .Compile();
 
                 return createLoggingEvent;
             }
 
             private static Func<object, object, bool> GetIsEnabledFor(Type loggerType, Type logEventLevelType,
-                UnaryExpression instanceCast,
-                UnaryExpression levelCast,
-                ParameterExpression instanceParam,
-                ParameterExpression levelParam)
+                                                                      UnaryExpression instanceCast,
+                                                                      UnaryExpression levelCast,
+                                                                      ParameterExpression instanceParam,
+                                                                      ParameterExpression levelParam)
             {
                 MethodInfo isEnabledMethodInfo = loggerType.GetMethodPortable("IsEnabledFor", logEventLevelType);
                 MethodCallExpression isEnabledMethodCall = Expression.Call(instanceCast, isEnabledMethodInfo, levelCast);
 
                 Func<object, object, bool> result =
                     Expression.Lambda<Func<object, object, bool>>(isEnabledMethodCall, instanceParam, levelParam)
-                        .Compile();
+                              .Compile();
 
                 return result;
             }
@@ -1570,13 +1590,13 @@ namespace LibLog.LogProviders
                     Expression.Assign(
                         Expression.Property(
                             Expression.Property(Expression.Convert(loggingEventParameter, loggingEventType),
-                                propertiesProperty), item, keyParameter), valueParameter);
+                                                propertiesProperty), item, keyParameter), valueParameter);
 
                 Action<object, string, object> result =
                     Expression.Lambda<Action<object, string, object>>
-                        (body, loggingEventParameter, keyParameter,
-                            valueParameter)
-                        .Compile();
+                              (body, loggingEventParameter, keyParameter,
+                               valueParameter)
+                              .Compile();
 
                 return result;
             }
@@ -1599,8 +1619,8 @@ namespace LibLog.LogProviders
 
                 string formattedMessage =
                     LogMessageFormatter.FormatStructuredMessage(message,
-                        formatParameters,
-                        out patternMatches);
+                                                                formatParameters,
+                                                                out patternMatches);
 
                 // determine correct caller - this might change due to jit optimizations with method inlining
                 if (s_callerStackBoundaryType == null)
@@ -1640,7 +1660,7 @@ namespace LibLog.LogProviders
             {
                 IEnumerable<KeyValuePair<string, object>> keyToValue =
                     patternMatches.Zip(formatParameters,
-                        (key, value) => new KeyValuePair<string, object>(key, value));
+                                       (key, value) => new KeyValuePair<string, object>(key, value));
 
                 foreach (KeyValuePair<string, object> keyValuePair in keyToValue)
                 {
@@ -1709,8 +1729,8 @@ namespace LibLog.LogProviders
             LoggerType = Type.GetType(string.Format(CultureInfo.InvariantCulture, TypeTemplate, "Logger"));
             TraceEventTypeType = TraceEventTypeValues.Type;
             if (LogEntryType == null
-                || TraceEventTypeType == null
-                || LoggerType == null)
+                 || TraceEventTypeType == null
+                 || LoggerType == null)
             {
                 return;
             }
@@ -1741,8 +1761,8 @@ namespace LibLog.LogProviders
         internal static bool IsLoggerAvailable()
         {
             return ProviderIsAvailableOverride
-                   && TraceEventTypeType != null
-                   && LogEntryType != null;
+                 && TraceEventTypeType != null
+                 && LogEntryType != null;
         }
 
         private static Action<string, string, int> GetWriteLogEntry()
@@ -1961,10 +1981,10 @@ namespace LibLog.LogProviders
                 destructureObjectsParam
             });
             var func = Expression.Lambda<Func<string, object, bool, object>>(
-                    methodCall,
-                    propertyNameParam,
-                    valueParam,
-                    destructureObjectsParam)
+                methodCall,
+                propertyNameParam,
+                valueParam,
+                destructureObjectsParam)
                 .Compile();
             return name => func("SourceContext", name, false);
         }
@@ -2142,7 +2162,7 @@ namespace LibLog.LogProviders
             string caption,
             string description,
             params object[] args
-        );
+            );
 
         private static bool s_providerIsAvailableOverride = true;
         private readonly WriteDelegate _logWriteDelegate;
@@ -2386,10 +2406,10 @@ namespace LibLog.LogProviders
         {
 #if LIBLOG_PORTABLE
             return type.GetTypeInfo().DeclaredConstructors.FirstOrDefault
-            (constructor =>
-                constructor.GetParameters()
-                    .Select(parameter => parameter.ParameterType)
-                    .SequenceEqual(types));
+                       (constructor =>
+                            constructor.GetParameters()
+                                       .Select(parameter => parameter.ParameterType)
+                                       .SequenceEqual(types));
 #else
             return type.GetConstructor(types);
 #endif

@@ -1,4 +1,5 @@
 using Consoleable.Component.With.LibLog.Properties;
+using LibLog;
 
 namespace Consoleable.Component.With.LibLog
 {

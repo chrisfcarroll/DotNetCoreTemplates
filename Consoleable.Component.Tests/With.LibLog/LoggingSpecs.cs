@@ -1,24 +1,17 @@
 using System;
-using Consoleable.Component.Properties;
+using Consoleable.Component.With.LibLog.Properties;
 using LibLog;
 using NUnit.Framework;
 using TestBase;
 using StringListLogger=LibLog.StringListLogger;
 
-namespace Consoleable.Component.Tests
+namespace Consoleable.Component.Specs.With.LibLog
 {
     [TestFixture]
-    public class ComponentSpecs
+    public class LoggingSpecs
     {
-        AComponent sut;
+        Consoleable.Component.With.LibLog.AComponent sut;
         ILog logger;
-
-        [SetUp]
-        public void Setup()
-        {
-            logger= LogProvider.Use<StringListLogProvider>()("Test");
-            sut = new AComponent(logger, new Settings());
-        }
 
         [Test]
         public void Logs__WhenAVerbIsCalled()
@@ -30,6 +23,13 @@ namespace Consoleable.Component.Tests
             StringListLogger.Loggers["Test"].LoggedLines
                 .ShouldNotBeEmpty()
                 .ShouldContain(s => s.Contains("AnAction"));
+        }
+    
+        [SetUp]
+        public void Setup()
+        {
+            logger= LogProvider.Use<StringListLogProvider>()("Test");
+            sut = new Consoleable.Component.With.LibLog.AComponent(logger, new Settings());
         }
     }
 }
