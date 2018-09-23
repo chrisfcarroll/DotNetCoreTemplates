@@ -5,18 +5,18 @@ using Microsoft.Extensions.Configuration;
 
 namespace Consoleable.Component.Properties
 {
-    class LoggingConfig
+    class LibLogFactory
     {
         public static ILog LoggerFor<T>(){return LogProvider.For<T>();}
         public static ILog LoggerFor(string name){return LogProvider.GetLogger(name);}
-        public static LoggingConfig Instance;
+        public static LibLogFactory Instance;
         
         public static ILog FromConfiguration(IConfiguration configuration)
         {
 
             configuration
                 .GetSection(ReadFromSectionName)
-                .Bind(Instance= new LoggingConfig());
+                .Bind(Instance= new LibLogFactory());
 
             LogProvider
                 .SetCurrentLogProvider(

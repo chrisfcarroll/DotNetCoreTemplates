@@ -1,7 +1,6 @@
-using LibLog;
-using Consoleable.Component.Properties;
+using Consoleable.Component.With.LibLog.Properties;
 
-namespace Consoleable.Component
+namespace Consoleable.Component.With.LibLog
 {
     public class AComponent
     {

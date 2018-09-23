@@ -17,45 +17,32 @@ namespace Consoleable.Component
         public static IConfiguration Configuration;
         public static ILog Logger;
         public static Settings Settings;
-        public static ILog CreateLogger<T>() { return LoggingConfig.LoggerFor<T>(); }
+        public static ILog CreateLogger<T>() { return LibLogFactory.LoggerFor<T>(); }
 
-        public static Instance<T> Configure<T>()
+        public static void Main(string[] args)
+        {
+            HelpAndExitIfNot( args.Length>0 );
+            
+            Configure<AComponent>();
+
+            var component = new AComponent(
+                Startup.CreateLogger<AComponent>(),
+                Startup.Settings
+            );
+            component.AnAction(args);
+        }
+
+        public static void Configure<T>()
         {
             Configuration = new ConfigurationBuilder()
                 .SetBasePath(Path.GetDirectoryName(typeof(Startup).Assembly.Location))
                 .AddJsonFile("appsettings.json", false)
                 .Build();
             Configuration.GetSection(typeof(T).Name).Bind(Settings = new Settings());
-            Logger = LoggingConfig.FromConfiguration(Configuration);
-            LoggingConfig.LoggerFor("Startup").Debug($"Console appsettings requested Setting {Settings.SomeSetting}, and requested logging with provider {LoggingConfig.Instance.Provider} at level {LoggingConfig.Instance.LogLevel}");
-            return new Instance<T>();
+            Logger = LibLogFactory.FromConfiguration(Configuration);
+            LibLogFactory.LoggerFor("Startup").Debug($"Console appsettings requested Setting {Settings.SomeSetting}, and requested logging with provider {LibLogFactory.Instance.Provider} at level {LibLogFactory.Instance.LogLevel}");
         }
 
-        public class Instance<T> : Startup
-        {
-            // ReSharper disable MemberHidesStaticFromOuterClass
-            public new IConfiguration Configuration => Startup.Configuration;
-            public new ILog Logger => Startup.Logger;
-            public new Settings Settings => Startup.Settings;
-            public     ILog CreateLogger() => Startup.CreateLogger<T>();
-        }
-    }
-
-    public class Program
-    {
-        public static void Main(string[] args)
-        {
-            HelpAndExitIfNot( args.Length>0 );
-            
-            Startup.Configure<AComponent>();
-
-            var component = new AComponent(
-                                           Startup.CreateLogger<AComponent>(),
-                                           Startup.Settings
-                                          );
-
-            component.AVerb(args);
-        }
 
         static void HelpAndExitIfNot(bool argsOk)
         {

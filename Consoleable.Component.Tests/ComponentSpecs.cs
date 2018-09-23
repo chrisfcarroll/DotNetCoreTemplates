@@ -23,13 +23,13 @@ namespace Consoleable.Component.Tests
         [Test]
         public void Logs__WhenAVerbIsCalled()
         {
-            sut.AVerb("boo");
+            sut.AnAction("boo");
 
             StringListLogger.Loggers["Test"].LoggedLines.ForEach(Console.WriteLine);
 
             StringListLogger.Loggers["Test"].LoggedLines
                 .ShouldNotBeEmpty()
-                .ShouldContain(s => s.Contains("AVerb"));
+                .ShouldContain(s => s.Contains("AnAction"));
         }
     }
 }
